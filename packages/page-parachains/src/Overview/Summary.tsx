@@ -13,10 +13,11 @@ import { useTranslation } from '../translate';
 
 interface Props {
   parachainCount?: number;
+  proposalCount?: number;
   nextFreeId?: BN;
 }
 
-function Summary ({ nextFreeId, parachainCount }: Props): React.ReactElement<Props> {
+function Summary ({ nextFreeId, parachainCount, proposalCount }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
 
@@ -34,9 +35,14 @@ function Summary ({ nextFreeId, parachainCount }: Props): React.ReactElement<Pro
             {formatNumber(parachainCount)}
           </CardSummary>
         )}
+        {isNumber(proposalCount) && (
+          <CardSummary label={t<string>('proposals')}>
+            {formatNumber(proposalCount)}
+          </CardSummary>
+        )}
         {api.query.parachains && nextFreeId && (
           <CardSummary label={t<string>('next id')}>
-            {nextFreeId.toString()}
+            {formatNumber(nextFreeId)}
           </CardSummary>
         )}
       </section>
@@ -45,7 +51,7 @@ function Summary ({ nextFreeId, parachainCount }: Props): React.ReactElement<Pro
           className='ui--media-small'
           label={t<string>('best block')}
         >
-          <BestNumber withPound />
+          <BestNumber />
         </CardSummary>
       </section>
     </SummaryBox>

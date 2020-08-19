@@ -2,15 +2,17 @@
 // This software may be modified and distributed under the terms
 // of the Apache-2.0 license. See the LICENSE file for details.
 
-import { Balance } from '@polkadot/types/interfaces';
+import { Balance, EraIndex, SlashingSpans } from '@polkadot/types/interfaces';
 import { DeriveAccountInfo, DeriveStakingQuery } from '@polkadot/api-derive/types';
 
 import BN from 'bn.js';
-import React, { useCallback, useEffect, useState } from 'react';
-import { AddressSmall, Icon } from '@polkadot/react-components';
+import React, { useCallback, useMemo } from 'react';
+import { ApiPromise } from '@polkadot/api';
+import { AddressSmall, Icon, LinkExternal } from '@polkadot/react-components';
 import { checkVisibility } from '@polkadot/react-components/util';
 import { useApi, useCall } from '@polkadot/react-hooks';
 import { FormatBalance } from '@polkadot/react-query';
+import { Option } from '@polkadot/types';
 
 import Favorite from './Favorite';
 import NominatedBy from './NominatedBy';
@@ -26,7 +28,7 @@ interface Props {
   isFavorite: boolean;
   isMain?: boolean;
   lastBlock?: string;
-  nominatedBy?: [string, number][];
+  nominatedBy?: [string, EraIndex, number][];
   onlineCount?: false | number;
   onlineMessage?: boolean;
   points?: string;
@@ -70,22 +72,32 @@ function expandInfo ({ exposure, validatorPrefs }: DeriveStakingQuery): StakingS
   };
 }
 
+const transformSlashes = {
+  transform: (opt: Option<SlashingSpans>) => opt.unwrapOr(null)
+};
+
+function useAddressCalls (api: ApiPromise, address: string, isMain?: boolean) {
+  const params = useMemo(() => [address], [address]);
+  const accountInfo = useCall<DeriveAccountInfo>(api.derive.accounts.info, params);
+  const slashingSpans = useCall<SlashingSpans | null>(!isMain && api.query.staking.slashingSpans, params, transformSlashes);
+  const stakingInfo = useCall<DeriveStakingQuery>(api.derive.staking.query, params);
+
+  return { accountInfo, slashingSpans, stakingInfo };
+}
+
 function Address ({ address, className = '', filterName, hasQueries, isElected, isFavorite, isMain, lastBlock, nominatedBy, onlineCount, onlineMessage, points, toggleFavorite, withIdentity }: Props): React.ReactElement<Props> | null {
   const { api } = useApi();
-  const accountInfo = useCall<DeriveAccountInfo>(api.derive.accounts.info, [address]);
-  const stakingInfo = useCall<DeriveStakingQuery>(api.derive.staking.query, [address]);
-  const [{ commission, nominators, stakeOther, stakeOwn }, setStakingState] = useState<StakingState>({ nominators: [] });
-  const [isVisible, setIsVisible] = useState(true);
+  const { accountInfo, slashingSpans, stakingInfo } = useAddressCalls(api, address, isMain);
 
-  useEffect((): void => {
-    stakingInfo && setStakingState(expandInfo(stakingInfo));
-  }, [stakingInfo]);
+  const { commission, nominators, stakeOther, stakeOwn } = useMemo(
+    () => stakingInfo ? expandInfo(stakingInfo) : { nominators: [] },
+    [stakingInfo]
+  );
 
-  useEffect((): void => {
-    accountInfo && setIsVisible(
-      checkVisibility(api, address, accountInfo, filterName, withIdentity)
-    );
-  }, [api, accountInfo, address, filterName, withIdentity]);
+  const isVisible = useMemo(
+    () => accountInfo ? checkVisibility(api, address, accountInfo, filterName, withIdentity) : true,
+    [api, accountInfo, address, filterName, withIdentity]
+  );
 
   const _onQueryStats = useCallback(
     (): void => {
@@ -123,7 +135,12 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
             stakeOther={stakeOther}
           />
         )
-        : <NominatedBy nominators={nominatedBy} />
+        : (
+          <NominatedBy
+            nominators={nominatedBy}
+            slashingSpans={slashingSpans}
+          />
+        )
       }
       <td className='number'>
         {stakeOwn?.gtn(0) && (
@@ -150,6 +167,13 @@ function Address ({ address, className = '', filterName, hasQueries, isElected, 
             onClick={_onQueryStats}
           />
         )}
+      </td>
+      <td>
+        <LinkExternal
+          data={address}
+          type={isMain ? 'validator' : 'intention'}
+          withShort
+        />
       </td>
     </tr>
   );

@@ -50,14 +50,20 @@ interface CreateOptions {
 }
 
 const DEFAULT_PAIR_TYPE = 'sr25519';
+const isElectron = navigator.userAgent.toLowerCase().indexOf(' electron/') > -1;
 
-function deriveValidate (seed: string, derivePath: string, pairType: KeypairType): string | null {
+function deriveValidate (seed: string, seedType: SeedType, derivePath: string, pairType: KeypairType): string | null {
   try {
-    const { path } = keyExtractSuri(`${seed}${derivePath}`);
+    const { password, path } = keyExtractSuri(`${seed}${derivePath}`);
 
     // we don't allow soft for ed25519
     if (pairType === 'ed25519' && path.some(({ isSoft }): boolean => isSoft)) {
       return 'Soft derivation paths are not allowed on ed25519';
+    }
+
+    // we don't allow password for hex seed
+    if (seedType === 'raw' && password) {
+      return 'Password are ignored for hex seed';
     }
   } catch (error) {
     return (error as Error).message;
@@ -107,7 +113,7 @@ function generateSeed (_seed: string | undefined | null, derivePath: string, see
 }
 
 function updateAddress (seed: string, derivePath: string, seedType: SeedType, pairType: KeypairType): AddressState {
-  const deriveError = deriveValidate(seed, derivePath, pairType);
+  const deriveError = deriveValidate(seed, seedType, derivePath, pairType);
   let isSeedValid = seedType === 'raw'
     ? rawValidate(seed)
     : mnemonicValidate(seed);
@@ -264,7 +270,6 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
           <Modal.Column>
             <Input
               autoFocus
-              className='full'
               help={t<string>('Name given to this account. You can edit it. To use the account to validate or nominate, it is a good practice to append the function of the account in the name, e.g "name_you_want - stash".')}
               isError={!isNameValid}
               label={t<string>('name')}
@@ -281,7 +286,6 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
         <Modal.Columns>
           <Modal.Column>
             <Input
-              className='full'
               help={t<string>('The private key for your account is derived from this seed. This seed must be kept secret as anyone in its possession has access to the funds of this account. If you validate, use the seed of the session account as the "--key" parameter of your node.')}
               isAction
               isError={!isSeedValid}
@@ -335,16 +339,19 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
           <Modal.Columns>
             <Modal.Column>
               <Input
-                className='full'
-                help={t<string>('You can set a custom derivation path for this account using the following syntax "/<soft-key>//<hard-key>///<password>". The "/<soft-key>" and "//<hard-key>" may be repeated and mixed`. The "///password" is optional and should only occur once.')}
+                help={t<string>('You can set a custom derivation path for this account using the following syntax "/<soft-key>//<hard-key>". The "/<soft-key>" and "//<hard-key>" may be repeated and mixed`. An optional "///<password>" can be used with a mnemonic seed, and may only be specified once.')}
                 isError={!!deriveError}
                 label={t<string>('secret derivation path')}
                 onChange={_onChangeDerive}
                 onEnter={_onCommit}
                 placeholder={
-                  pairType === 'sr25519'
-                    ? t<string>('//hard/soft///password')
-                    : t<string>('//hard///password')
+                  seedType === 'raw'
+                    ? pairType === 'sr25519'
+                      ? t<string>('//hard/soft')
+                      : t<string>('//hard')
+                    : pairType === 'sr25519'
+                      ? t<string>('//hard/soft///password')
+                      : t<string>('//hard///password')
                 }
                 value={derivePath}
               />
@@ -357,6 +364,11 @@ function Create ({ className = '', onClose, onStatusChange, seed: propsSeed, typ
             </Modal.Column>
           </Modal.Columns>
         </Expander>
+        {!isElectron && (
+          <article className='warning'>
+            <p>{t<string>('Consider storing your account in a signer such as a browser extension, hardware device, QR-capable phone wallet (non-connected) or desktop application for optimal account security.')}&nbsp;{t<string>('Future versions of the web-only interface will drop support for non-external accounts, much like the IPFS version.')}</p>
+          </article>
+        )}
       </Modal.Content>
       <Modal.Actions onCancel={onClose}>
         <Button
