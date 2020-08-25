@@ -142,6 +142,12 @@ function createTest (t: TFunction): LinkOption[] {
       value: 'wss://track-rpc.polkadot.io'
     },
     {
+      info: 'rococoAcala',
+      isChild: true,
+      text: t<string>('rpc.rococo.acala', 'Mandala PC1 (Acala Testpara, hosted by Acala)', { ns: 'apps-config' }),
+      value: 'wss://rococo-1.acala.laminar.one'
+    },
+    {
       dnslink: 'westend',
       info: 'westend',
       text: t<string>('rpc.westend', 'Westend (Polkadot Testnet, hosted by Parity)', { ns: 'apps-config' }),
@@ -183,6 +189,11 @@ function createTest (t: TFunction): LinkOption[] {
       info: 'kilt',
       text: t<string>('rpc.kilt', 'Mashnet (KILT Canary, hosted by KILT Protocol)', { ns: 'apps-config' }),
       value: 'wss://full-nodes.kilt.io:9944/'
+    },
+    {
+      info: 'laminar',
+      text: t<string>('rpc.turbulence', 'Turbulence (Laminar Testnet, hosted by Laminar)', { ns: 'apps-config' }),
+      value: 'wss://testnet-node-1.laminar-chain.laminar.one/ws'
     }
   ];
 }

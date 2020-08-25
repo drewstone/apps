@@ -48,6 +48,8 @@ function checkVisible (name: string, { api, isApiConnected, isApiReady }: ApiPro
     return false;
   } else if (needsAccounts && !hasAccounts) {
     return false;
+  } else if (!needsApi) {
+    return true;
   } else if (!isApiReady || !isApiConnected) {
     return false;
   } else if (needsSudo && !hasSudo) {
@@ -122,7 +124,7 @@ function Menu ({ className = '' }: Props): React.ReactElement<Props> {
   const isLoading = !apiProps.isApiReady || !apiProps.isApiConnected;
 
   return (
-    <div className={`${className}${isLoading ? ' isLoading' : ''} menuBg ui--highlight--before ui--highlight--border`}>
+    <div className={`${className}${isLoading ? ' isLoading' : ''} highlight--bg-light highlight--border`}>
       <div className='menuSection'>
         <ChainInfo />
         {activeRoute && (
@@ -141,7 +143,7 @@ function Menu ({ className = '' }: Props): React.ReactElement<Props> {
           ))}
         </ul>
       </div>
-      <div className='menuSection ui--media-1200'>
+      <div className='menuSection media--1200'>
         <ul className='menuItems'>
           {externalRef.current.map((route): React.ReactNode => (
             <Item
@@ -163,26 +165,9 @@ export default React.memo(styled(Menu)`
   display: flex;
   justify-content: space-between;
   padding: 0;
-  position: relative;
   z-index: 220;
 
-  &.menuBg,
-  .menuBg {
-    background: white;
-
-    &:before {
-      bottom: 0;
-      content: ' ';
-      left: 0;
-      opacity: 0.1;
-      position: absolute;
-      right: 0;
-      top: 0;
-      z-index: -1;
-    }
-  }
-
-  &.isLoading.menuBg {
+  &.isLoading {
     background: #eee;
 
     &:before {
@@ -191,6 +176,10 @@ export default React.memo(styled(Menu)`
 
     .menuActive {
       background: #f5f3f1;
+    }
+
+    .menuItems {
+      filter: grayscale(1);
     }
   }
 
@@ -206,6 +195,7 @@ export default React.memo(styled(Menu)`
     border-radius: 0.25rem 0.25rem 0 0;
     padding: 1rem 1.5rem;
     margin: 0 1rem -1px;
+    z-index: 1;
 
     .ui--Icon {
       margin-right: 0.5rem;
