@@ -1,6 +1,5 @@
 // Copyright 2017-2020 @polkadot/react-api authors & contributors
-// This software may be modified and distributed under the terms
-// of the Apache-2.0 license. See the LICENSE file for details.
+// SPDX-License-Identifier: Apache-2.0
 
 import { InjectedExtension } from '@polkadot/extension-inject/types';
 import { ChainProperties, ChainType } from '@polkadot/types/interfaces';
@@ -98,7 +97,7 @@ async function retrieve (api: ApiPromise): Promise<ChainData> {
   // HACK Horrible hack to try and give some window to the DOT denomination
   const properties = api.genesisHash.eq(POLKADOT_GENESIS)
     ? bestHeader.number.toBn().gte(POLKADOT_DENOM_BLOCK)
-      ? registry.createType('ChainProperties', { ...chainProperties, tokenDecimals: 10, tokenSymbol: 'New DOT' })
+      ? registry.createType('ChainProperties', { ...chainProperties, tokenDecimals: 10, tokenSymbol: 'DOT' })
       : registry.createType('ChainProperties', { ...chainProperties, tokenDecimals: 12, tokenSymbol: 'DOT (old)' })
     : chainProperties;
 

@@ -1,6 +1,5 @@
 // Copyright 2017-2020 @polkadot/apps-config authors & contributors
-// This software may be modified and distributed under the terms
-// of the Apache-2.0 license. See the LICENSE file for details.
+// SPDX-License-Identifier: Apache-2.0
 
 import { TFunction } from 'i18next';
 import { Option } from './types';
@@ -51,7 +50,7 @@ function createDev (t: TFunction): LinkOption[] {
   ];
 }
 
-function createLive (t: TFunction): LinkOption[] {
+function createLiveNetworks (t: TFunction): LinkOption[] {
   return [
     // fixed, polkadot
     {
@@ -91,7 +90,7 @@ function createLive (t: TFunction): LinkOption[] {
     },
     {
       info: 'crab',
-      text: t<string>('rpc.crab', 'Crab (Darwinia Canary, hosted by Darwinia Network)', { ns: 'apps-config' }),
+      text: t<string>('rpc.crab', 'Darwinia Crab (Darwinia Canary, hosted by Darwinia Network)', { ns: 'apps-config' }),
       value: 'wss://crab.darwinia.network'
     },
     {
@@ -110,13 +109,28 @@ function createLive (t: TFunction): LinkOption[] {
       info: 'nodle',
       text: t<string>('rpc.nodle-main', 'Nodle Main (Nodle Mainnet, hosted by Nodle)', { ns: 'apps-config' }),
       value: 'wss://main1.nodleprotocol.io'
+    },
+    {
+      info: 'plasm',
+      text: t<string>('rpc.plasm', 'Plasm (Plasm Mainnet, hosted by Stake Technologies)', { ns: 'apps-config' }),
+      value: 'wss://rpc.plasmnet.io/'
+    },
+    {
+      info: 'stafi',
+      text: t<string>('rpc.stafi', 'Stafi (Stafi Mainnet, hosted by Stafi Foundation)', { ns: 'apps-config' }),
+      value: 'wss://mainnet-rpc.stafi.io'
+    },
+    {
+      info: 'subsocial',
+      text: t<string>('rpc.subsocial', 'Subsocial (Subsocial Network, hosted by DappForce)', { ns: 'apps-config' }),
+      value: 'wss://rpc.subsocial.network'
     }
   ];
 }
 
-function createTest (t: TFunction): LinkOption[] {
+function createTestNetworks (t: TFunction): LinkOption[] {
   return [
-    // polkadot
+    // polkadot test relays
     {
       dnslink: 'rococo',
       info: 'rococo',
@@ -148,10 +162,28 @@ function createTest (t: TFunction): LinkOption[] {
       value: 'wss://rococo-1.acala.laminar.one'
     },
     {
-      dnslink: 'westend',
-      info: 'westend',
-      text: t<string>('rpc.westend', 'Westend (Polkadot Testnet, hosted by Parity)', { ns: 'apps-config' }),
-      value: 'wss://westend-rpc.polkadot.io'
+      info: 'rococoDarwinia',
+      isChild: true,
+      text: t<string>('rpc.rococo.darwinia', 'Darwinia PC1 (Darwinia Testpara, hosted by Darwinia Network)', { ns: 'apps-config' }),
+      value: 'wss://parachain-rpc.darwinia.network'
+    },
+    {
+      info: 'rococoPlasm',
+      isChild: true,
+      text: t<string>('rpc.rococo.plasm', 'Plasm PC1 (Plasm Testpara, hosted by Stake Technologies)', { ns: 'apps-config' }),
+      value: 'wss://rpc.parachain.plasmnet.io'
+    },
+    {
+      info: 'rococoRobonomics',
+      isChild: true,
+      text: t<string>('rpc.rococo.robonomics', 'Robonomics PC1 (Robonomics Testpara, hosted by Airalab)', { ns: 'apps-config' }),
+      value: 'wss://parachain-rpc.robonomics.network'
+    },
+    {
+      info: 'rococoLaminar',
+      isChild: true,
+      text: t<string>('rpc.rococo.laminar', 'Turbulence PC1 (Laminar Testpara, hosted by Laminar)', { ns: 'apps-config' }),
+      value: 'wss://rococo-1.laminar-chain.laminar.one'
     },
     // alphabetical based on chain name
     {
@@ -170,15 +202,25 @@ function createTest (t: TFunction): LinkOption[] {
       value: 'wss://beresheet1.edgewa.re'
     },
     {
-      info: 'substrate',
-      text: t<string>('rpc.flamingfir', 'Flaming Fir (Substrate Testnet, hosted by Parity)', { ns: 'apps-config' }),
-      value: 'wss://substrate-rpc.parity.io'
+      info: 'crust',
+      text: t<string>('rpc.crust.network', 'Crust Maxwell CC2 (Crust Testnet, hosted by Crust Network)', { ns: 'apps-config' }),
+      value: 'wss://api.crust.network/'
     },
     {
       info: 'datahighway',
       isDisabled: true,
       text: t<string>('rpc.datahighway.harbour', 'Harbour (DataHighway Testnet, hosted by MXC)', { ns: 'apps-config' }),
       value: 'wss://testnet-harbour.datahighway.com'
+    },
+    {
+      info: 'dusty',
+      text: t<string>('rpc.dusty', 'Dusty (Plasm Testnet, hosted by Stake Technologies)', { ns: 'apps-config' }),
+      value: 'wss://rpc.dusty.plasmnet.io/'
+    },
+    {
+      info: 'substrate',
+      text: t<string>('rpc.flamingfir', 'Flaming Fir (Substrate Testnet, hosted by Parity)', { ns: 'apps-config' }),
+      value: 'wss://substrate-rpc.parity.io'
     },
     {
       info: 'acala',
@@ -191,9 +233,20 @@ function createTest (t: TFunction): LinkOption[] {
       value: 'wss://full-nodes.kilt.io:9944/'
     },
     {
+      info: 'phala',
+      text: t<string>('rpc.phala', 'Phala PoC-2 (Phala Testnet, hosted by Phala Network)', { ns: 'apps-config' }),
+      value: 'wss://poc2.phala.network/ws'
+    },
+    {
       info: 'laminar',
       text: t<string>('rpc.turbulence', 'Turbulence (Laminar Testnet, hosted by Laminar)', { ns: 'apps-config' }),
       value: 'wss://testnet-node-1.laminar-chain.laminar.one/ws'
+    },
+    {
+      dnslink: 'westend',
+      info: 'westend',
+      text: t<string>('rpc.westend', 'Westend (Polkadot Testnet, hosted by Parity)', { ns: 'apps-config' }),
+      value: 'wss://westend-rpc.polkadot.io'
     }
   ];
 }
@@ -233,13 +286,13 @@ export default function create (t: TFunction): LinkOption[] {
       text: t<string>('rpc.header.live', 'Live networks', { ns: 'apps-config' }),
       value: ''
     },
-    ...createLive(t),
+    ...createLiveNetworks(t),
     {
       isHeader: true,
       text: t<string>('rpc.header.test', 'Test networks', { ns: 'apps-config' }),
       value: ''
     },
-    ...createTest(t),
+    ...createTestNetworks(t),
     {
       isDevelopment: true,
       isHeader: true,

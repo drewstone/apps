@@ -1,6 +1,5 @@
 // Copyright 2017-2020 @polkadot/app-calendar authors & contributors
-// This software may be modified and distributed under the terms
-// of the Apache-2.0 license. See the LICENSE file for details.
+// SPDX-License-Identifier: Apache-2.0
 
 import BN from 'bn.js';
 
@@ -14,4 +13,12 @@ export interface EntryInfo {
   info: string | BN | null;
   isPending?: boolean;
   type: EntryType;
+}
+
+export interface DateState {
+  dateMonth: Date;
+  dateMonthNext: Date;
+  dateSelected: Date;
+  days: number[];
+  startClass: string;
 }
