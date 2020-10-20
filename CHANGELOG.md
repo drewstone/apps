@@ -1,5 +1,70 @@
 # CHANGELOG
 
+## 0.63.1 Oct 19, 2020
+
+Contributed:
+
+- Updates for new Acala testnet (Thanks to https://github.com/aniiantt)
+- Update i18n ko (Thanks to https://github.com/maestro779)
+- Update i18n fr (Thanks to https://github.com/Tbaut)
+- Contract metadata display bg on dark mode (Thanks to https://github.com/Tbaut)
+
+Changes:
+
+- Swap chain/prefix lookups to `@polkadot/networks` (single area to manage)
+- Fix formatting for large decimals on InputNumber (previously had toNumber)
+- Adjust Dock logos naming (aligns with network identifier)
+- Update i18n generation to handle routing strings
+- Estimate contracts execution gas (on contract call)
+- Use RPC for rent projection (to project eviction as available)
+- Metadata QR now aligns decimals with UI defaults (shared with react-api values)
+- Add endpoint for Canvas testnet (& setup types for node)
+
+
+## 0.62.1 Oct 13, 2020
+
+Contributed:
+
+- Add Dock network (Thanks to https://github.com/lovesh)
+- Bump Edgeware types for network updates (Thanks to https://github.com/jnaviask)
+- Add French i18n (Thanks to https://github.com/Tbaut & https://github.com/chevdor)
+- Update Italian i18n (Thanks to https://github.com/fomod-in)
+- Update Indonesian i18n (Thanks to https://github.com/nzjourney)
+
+Changes:
+
+- Update the contracts UI to support ink! 3.0-rc1 (via API)
+- Align contracts UI with the L&F/layout of the rest of the UI
+- Add contracts on-chain overview
+- Show code & contract availability statuses
+- Auto-query non-param messages from the contract overview
+- Expand info on logos (documentation, better/easier additions)
+- Update i18n to remove left navbar references
+- Support seconding multiple times from a single account
+
+
+## 0.61.1 Oct 5, 2020
+
+Contributed:
+
+- Update Arabic i18n for calendar (Thanks to https://github.com/YessineAmor)
+- Additional Korean i18n (Thanks to https://github.com/hskang9)
+- Italian i18n typo fix (Thanks to https://github.com/roccomuso)
+- Add Equilibrium testnet endpoint (Thanks to https://github.com/mikolajsobolewski)
+- Update types for stable-poc (Thanks to https://github.com/riusricardo)
+
+Changes:
+
+- Add experimental dark UI theme
+- Adjust i18n strings for network endpoint (explicit as per display)
+- Adjust vesting display with no countdown when fully vested
+- Adjust validator rewards, fixing issues with "keeps loading" when retrieved in the current era
+- Adjust updates on per-era change, protecting against non-existent (not yet retrieved) exposures
+- Add RoboHash icon theme
+- Adjust logging in InputAddress transforms (don't log already-handled errors)
+- Remove unmaintained packages (e.g. page-dashboard)
+
+
 ## 0.60.1 Sep 28, 2020
 
 Contributed:
