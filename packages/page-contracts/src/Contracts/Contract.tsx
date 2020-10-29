@@ -4,6 +4,7 @@
 import { ContractCallOutcome } from '@polkadot/api-contract/types';
 import { ActionStatus } from '@polkadot/react-components/Status/types';
 import { BlockNumber, ContractInfo } from '@polkadot/types/interfaces';
+import { ContractLink } from './types';
 
 import React, { useCallback, useEffect, useState } from 'react';
 import keyring from '@polkadot/ui-keyring';
@@ -21,6 +22,7 @@ interface Props {
   className?: string;
   contract: ContractPromise;
   index: number;
+  links?: ContractLink[];
   onCall: (contractIndex: number, messaeIndex: number, resultCb: (messageIndex: number, result?: ContractCallOutcome) => void) => void;
 }
 
@@ -28,7 +30,7 @@ function transformInfo (optInfo: Option<ContractInfo>): ContractInfo | null {
   return optInfo.unwrapOr(null);
 }
 
-function Contract ({ className, contract, index, onCall }: Props): React.ReactElement<Props> | null {
+function Contract ({ className, contract, index, links, onCall }: Props): React.ReactElement<Props> | null {
   const { t } = useTranslation();
   const { api } = useApi();
   const bestNumber = useCall<BlockNumber>(api.derive.chain.bestNumber);
@@ -94,6 +96,14 @@ function Contract ({ className, contract, index, onCall }: Props): React.ReactEl
           withMessages
         />
       </td>
+      <td className='top'>
+        {links?.map(({ blockHash, blockNumber }, index): React.ReactNode => (
+          <a
+            href={`#/explorer/query/${blockHash}`}
+            key={`${index}-${blockNumber}`}
+          >#{blockNumber}</a>
+        ))}
+      </td>
       <td className='number'>
         <AddressInfo
           address={contract.address}
@@ -110,11 +120,15 @@ function Contract ({ className, contract, index, onCall }: Props): React.ReactEl
         )}
       </td>
       <td className='number together media--1100'>
-        {bestNumber && evictAt && (
-          <>
-            <BlockToTime blocks={evictAt.sub(bestNumber)} />
-            #{formatNumber(evictAt)}
-          </>
+        {bestNumber && (
+          evictAt
+            ? (
+              <>
+                <BlockToTime blocks={evictAt.sub(bestNumber)} />
+                #{formatNumber(evictAt)}
+              </>
+            )
+            : t<string>('None')
         )}
       </td>
       <td className='button'>
