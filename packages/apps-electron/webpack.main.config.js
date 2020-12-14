@@ -3,12 +3,8 @@
 
 /* eslint-disable camelcase */
 
-const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const path = require('path');
-
-const ENV = process.env.NODE_ENV || 'production';
-const isProd = ENV === 'production';
 
 function createWebpack () {
   return [
@@ -17,28 +13,29 @@ function createWebpack () {
         electron: './src/electron',
         preload: './src/preload.ts'
       },
-      mode: ENV,
       module: {
         rules: [
           {
+            include: /node_modules/,
+            test: /\.mjs$/,
+            type: 'javascript/auto'
+          },
+          {
             exclude: /(node_modules)/,
-            test: /\.(js|ts|tsx)$/,
+            test: /\.(js|mjs|ts|tsx)$/,
             use: [
               require.resolve('thread-loader'),
               {
                 loader: require.resolve('babel-loader'),
-                options: require('@polkadot/dev/config/babel')
+                options: require('@polkadot/dev/config/babel-config-webpack.cjs')
               }
             ]
           }
         ]
       },
       node: {
-        __dirname: false
-      },
-      optimization: {
-        minimize: !!isProd,
-        minimizer: [new TerserPlugin()]
+        __dirname: false,
+        __filename: false
       },
       output: {
         filename: '[name].js',
@@ -48,7 +45,7 @@ function createWebpack () {
         new CopyWebpackPlugin({ patterns: [{ from: 'assets' }] })
       ],
       resolve: {
-        extensions: ['.js', '.jsx', '.json', '.ts', '.tsx']
+        extensions: ['.js', '.jsx', '.json', '.mjs', '.ts', '.tsx']
       },
       target: 'electron-main'
     }
