@@ -1,14 +1,14 @@
-// Copyright 2017-2020 @polkadot/app-accounts authors & contributors
+// Copyright 2017-2021 @polkadot/app-accounts authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
 import type { DeriveBalancesAll } from '@polkadot/api-derive/types';
-import type { AccountInfo } from '@polkadot/types/interfaces';
+import type { AccountInfoWithProviders, AccountInfoWithRefCount } from '@polkadot/types/interfaces';
 
 import BN from 'bn.js';
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { InputAddress, InputBalance, Modal, Toggle, TxButton } from '@polkadot/react-components';
+import { InputAddress, InputBalance, MarkWarning, Modal, Toggle, TxButton } from '@polkadot/react-components';
 import { useApi, useCall } from '@polkadot/react-hooks';
 import { Available } from '@polkadot/react-query';
 import { BN_ZERO, isFunction } from '@polkadot/util';
@@ -22,6 +22,10 @@ interface Props {
   senderId?: string;
 }
 
+function isRefcount (accountInfo: AccountInfoWithProviders | AccountInfoWithRefCount): accountInfo is AccountInfoWithRefCount {
+  return !!(accountInfo as AccountInfoWithRefCount).refcount;
+}
+
 function Transfer ({ className = '', onClose, recipientId: propRecipientId, senderId: propSenderId }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
   const { api } = useApi();
@@ -29,11 +33,11 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
   const [hasAvailable] = useState(true);
   const [isProtected, setIsProtected] = useState(true);
   const [isAll, setIsAll] = useState(false);
-  const [maxTransfer, setMaxTransfer] = useState<BN | null>(null);
+  const [[maxTransfer, noFees], setMaxTransfer] = useState<[BN | null, boolean]>([null, false]);
   const [recipientId, setRecipientId] = useState<string | null>(propRecipientId || null);
   const [senderId, setSenderId] = useState<string | null>(propSenderId || null);
   const balances = useCall<DeriveBalancesAll>(api.derive.balances.all, [senderId]);
-  const accountInfo = useCall<AccountInfo>(api.query.system.account, [senderId]);
+  const accountInfo = useCall<AccountInfoWithProviders | AccountInfoWithRefCount>(api.query.system.account, [senderId]);
 
   useEffect((): void => {
     if (balances && balances.accountId.eq(senderId) && recipientId && senderId && isFunction(api.rpc.payment?.queryInfo)) {
@@ -47,8 +51,8 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
 
               setMaxTransfer(
                 maxTransfer.gt(api.consts.balances.existentialDeposit)
-                  ? maxTransfer
-                  : null
+                  ? [maxTransfer, false]
+                  : [null, true]
               );
             })
             .catch(console.error);
@@ -57,11 +61,16 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
         }
       }, 0);
     } else {
-      setMaxTransfer(null);
+      setMaxTransfer([null, false]);
     }
   }, [api, balances, recipientId, senderId]);
 
-  const canToggleAll = !isProtected && balances && balances.accountId.eq(senderId) && maxTransfer && (!accountInfo || !accountInfo.refcount || accountInfo.refcount.isZero());
+  const noReference = accountInfo
+    ? isRefcount(accountInfo)
+      ? accountInfo.refcount.isZero()
+      : accountInfo.consumers.isZero()
+    : true;
+  const canToggleAll = !isProtected && balances && balances.accountId.eq(senderId) && maxTransfer && noReference;
 
   return (
     <Modal
@@ -165,6 +174,12 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
                   value={isAll}
                 />
               )}
+              {!isProtected && !noReference && (
+                <MarkWarning content={t<string>('There is an existing reference count on the sender account. As such the account cannot be reaped from the state.')} />
+              )}
+              {noFees && (
+                <MarkWarning content={t<string>('The transaction, after application of the transfer fees, will drop the balance below the existential deposit. As such the transfer will fail. The account needs more funds to cover the transaction fees.')} />
+              )}
             </Modal.Column>
             <Modal.Column>
               <p>{t<string>('If the recipient account is new, the balance needs to be more than the existential deposit. Likewise if the sending account balance drops below the same value, the account will be removed from the state.')}</p>
@@ -185,11 +200,7 @@ function Transfer ({ className = '', onClose, recipientId: propRecipientId, send
               ? [recipientId, maxTransfer]
               : [recipientId, amount]
           }
-          tx={
-            isProtected && api.tx.balances.transferKeepAlive
-              ? 'balances.transferKeepAlive'
-              : 'balances.transfer'
-          }
+          tx={(isProtected && api.tx.balances.transferKeepAlive) || api.tx.balances.transfer}
         />
       </Modal.Actions>
     </Modal>

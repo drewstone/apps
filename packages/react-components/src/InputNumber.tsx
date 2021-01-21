@@ -1,6 +1,7 @@
-// Copyright 2017-2020 @polkadot/react-components authors & contributors
+// Copyright 2017-2021 @polkadot/react-components authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ApiPromise } from '@polkadot/api';
 import type { SiDef } from '@polkadot/util/types';
 import type { BitLength } from './types';
 
@@ -8,7 +9,7 @@ import BN from 'bn.js';
 import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { registry } from '@polkadot/react-api';
+import { useApi } from '@polkadot/react-hooks';
 import { BN_TEN, BN_ZERO, formatBalance, isBn } from '@polkadot/util';
 
 import { BitLengthOption } from './constants';
@@ -96,7 +97,7 @@ function isValidNumber (bn: BN, bitLength: BitLength, isZeroable: boolean, maxVa
     // check if 0 and it should be a value
     (!isZeroable && bn.isZero()) ||
     // check that the bitlengths fit
-    bn.bitLength() > (bitLength || DEFAULT_BITLENGTH) ||
+    (bn.bitLength() > (bitLength || DEFAULT_BITLENGTH)) ||
     // cannot be > max (if specified)
     (maxValue && maxValue.gtn(0) && bn.gt(maxValue))
   ) {
@@ -106,7 +107,7 @@ function isValidNumber (bn: BN, bitLength: BitLength, isZeroable: boolean, maxVa
   return true;
 }
 
-function inputToBn (input: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [BN, boolean] {
+function inputToBn (api: ApiPromise, input: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [BN, boolean] {
   const [siPower, basePower, siUnitPower] = getSiPowers(si);
 
   // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
@@ -120,7 +121,7 @@ function inputToBn (input: string, si: SiDef | null, bitLength: BitLength, isZer
     }
 
     const div = new BN(input.replace(/\.\d*$/, ''));
-    const modString = input.replace(/^\d+\./, '').substr(0, registry.chainDecimals);
+    const modString = input.replace(/^\d+\./, '').substr(0, api.registry.chainDecimals);
     const mod = new BN(modString);
 
     result = div
@@ -137,8 +138,8 @@ function inputToBn (input: string, si: SiDef | null, bitLength: BitLength, isZer
   ];
 }
 
-function getValuesFromString (value: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [string, BN, boolean] {
-  const [valueBn, isValid] = inputToBn(value, si, bitLength, isZeroable, maxValue);
+function getValuesFromString (api: ApiPromise, value: string, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [string, BN, boolean] {
+  const [valueBn, isValid] = inputToBn(api, value, si, bitLength, isZeroable, maxValue);
 
   return [
     value,
@@ -159,29 +160,30 @@ function getValuesFromBn (valueBn: BN, si: SiDef | null): [string, BN, boolean] 
   ];
 }
 
-function getValues (value: BN | string = BN_ZERO, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [string, BN, boolean] {
+function getValues (api: ApiPromise, value: BN | string = BN_ZERO, si: SiDef | null, bitLength: BitLength, isZeroable: boolean, maxValue?: BN): [string, BN, boolean] {
   return isBn(value)
     ? getValuesFromBn(value, si)
-    : getValuesFromString(value, si, bitLength, isZeroable, maxValue);
+    : getValuesFromString(api, value, si, bitLength, isZeroable, maxValue);
 }
 
 function InputNumber ({ autoFocus, bitLength = DEFAULT_BITLENGTH, children, className = '', defaultValue, help, isDecimal, isFull, isSi, isDisabled, isError = false, isWarning, isZeroable = true, label, labelExtra, maxLength, maxValue, onChange, onEnter, onEscape, placeholder, value: propsValue }: Props): React.ReactElement<Props> {
   const { t } = useTranslation();
+  const { api } = useApi();
   const [si, setSi] = useState<SiDef | null>(isSi ? formatBalance.findSi('-') : null);
   const [isPreKeyDown, setIsPreKeyDown] = useState(false);
   const [[value, valueBn, isValid], setValues] = useState<[string, BN, boolean]>(
-    getValues(propsValue || defaultValue, si, bitLength, isZeroable, maxValue)
+    getValues(api, propsValue || defaultValue, si, bitLength, isZeroable, maxValue)
   );
 
   useEffect((): void => {
-    onChange && onChange(valueBn);
-  }, [onChange, valueBn]);
+    onChange && onChange(isValid ? valueBn : undefined);
+  }, [isValid, onChange, valueBn]);
 
   const _onChangeWithSi = useCallback(
     (input: string, si: SiDef | null) => setValues(
-      getValuesFromString(input, si, bitLength, isZeroable, maxValue)
+      getValuesFromString(api, input, si, bitLength, isZeroable, maxValue)
     ),
-    [bitLength, isZeroable, maxValue]
+    [api, bitLength, isZeroable, maxValue]
   );
 
   const _onChange = useCallback(
